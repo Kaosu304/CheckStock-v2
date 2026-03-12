@@ -71,15 +71,24 @@ function search(){
 /* ===== RENDER LIST ===== */
 function render(list){
   resultEl.innerHTML = "";
+  list.forEach(d => {
+    const loc = (d.location || "").trim();
+    const mapUrl = "maps/" + encodeURIComponent(loc) + ".jpg";
 
-  if(!list.length){
-    resultEl.innerHTML = "<div class='
-<div class="actions">
-  <a class="btn btn-map" href="maps/${encodeURIComponent(d.location)}.jpg" target="_blank" rel="noopener">🗺 เปิดแผนที่</a>
-</div>
-'>ไม่พบข้อมูล</div>";
-    return;
-  }
+    resultEl.innerHTML += `
+      <div class="card">
+        <div><b>${d.job}</b></div>
+        <div class="location">${loc}</div>
+        <div>รหัสลูกค้า: ${d.code}</div>
+
+        <div class="actions">
+          <a class="btn btn-map" href="${mapUrl}" target="_blank" rel="noopener">🗺 เปิดแผนที่</a>
+        </div>
+      </div>
+    `;
+  });
+}
+
 
   list.forEach(d => {
     resultEl.innerHTML += `
