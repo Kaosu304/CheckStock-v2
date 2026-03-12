@@ -15,62 +15,67 @@
 
 <h2>ค้นหางาน</h2>
 
-<input id="search" placeholder="พิมพ์รหัสลูกค้า หรือ ชื่องาน หรือ โซนเช่น A2-10">
+<input id="search" placeholder="พิมพ์รหัสลูกค้า หรือ ชื่องาน">
 
 <div id="stats" class="card">สรุป: -</div>
-<div id="zoneInfo"></div>
 <div id="result"></div>
 
-
-
 <script>
-  
-function renderStats(all, filtered) {
-  const totalJobs = all.length;
-
-  const totalCustomers = new Set(
-    all.map(d => d.code).filter(Boolean)
-  ).size;
-
-  const totalLocations = new Set(
-    all.map(d => d.location).filter(Boolean)
-  ).size;
-
-  const filteredJobs = filtered.length;
-
-  statsEl.innerHTML =
-    "ทั้งหมด: " + totalJobs + " งาน • " +
-    totalCustomers + " ลูกค้า • " +
-    totalLocations + " โลเคชั่น" +
-    "<br>ผลค้นหา: " + filteredJobs + " งาน";
-}
-
-console.log("CHECKSTOCK V2 CLEAN START");
+console.log("CHECKSTOCK V2 STEP1 OK");
 
 const SHEET_ID = "17dwMvTFAu48MdQ8FwKRDJGAQuAEwpQNmoggzD8OqGJA";
 const CSV_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv";
 
-let data = [];
-  const statsEl = document.getElementById("stats");
+const searchEl = document.getElementById("search");
+const resultEl = document.getElementById("result");
+const statsEl  = document.getElementById("stats");
 
+let data = [];
+
+/* ===== LOAD DATA ===== */
 fetch(CSV_URL)
   .then(r => r.text())
   .then(text => {
     const rows = text.split("\n").slice(1);
     data = rows.map(r => {
       const c = r.split(",");
-      return { code:c[0]||"", job:c[1]||"", location:c[2]||"" };
-      enderStats(data, data);
-      renderStats(data, data);
-    });
+      return {
+        code: (c[0] || "").trim(),
+        job: (c[1] || "").trim(),
+        location: (c[2] || "").trim()
+      };
+    }).filter(d => d.code || d.job || d.location);
+
+    renderStats(data, data);
+    render(data);
   });
 
-document.getElementById("search").addEventListener("input", search);
+/* ===== SEARCH ===== */
+searchEl.addEventListener("input", search);
 
+function search(){
+  const q = searchEl.value.toLowerCase();
+  const filtered = data.filter(d =>
+    d.code.toLowerCase().includes(q) ||
+    d.job.toLowerCase().includes(q) ||
+    d.location.toLowerCase().includes(q)
+  );
+
+  renderStats(data, filtered);
+  render(filtered);
+}
+
+/* ===== RENDER LIST ===== */
 function render(list){
-  result.innerHTML = "";
+  resultEl.innerHTML = "";
+
+  if(!list.length){
+    resultEl.innerHTML = "<div class='card'>ไม่พบข้อมูล</div>";
+    return;
+  }
+
   list.forEach(d => {
-    result.innerHTML += `
+    resultEl.innerHTML += `
       <div class="card">
         <div><b>${d.job}</b></div>
         <div class="location">${d.location}</div>
@@ -78,25 +83,19 @@ function render(list){
       </div>`;
   });
 }
-  
-function search() {
-  const q = document.getElementById("search").value.toLowerCase();
 
-  // กรองข้อมูลตามคำค้น
-  const result = data.filter(d =>
-    (d.code || "").toLowerCase().includes(q) ||
-    (d.job || "").toLowerCase().includes(q) ||
-    (d.location || "").toLowerCase().includes(q)
-  );
+/* ===== STATS ===== */
+function renderStats(all, filtered){
+  const totalJobs = all.length;
+  const customers = new Set(all.map(d => d.code)).size;
+  const locations = new Set(all.map(d => d.location)).size;
 
-  // ✅ อัปเดตสรุป
-  renderStats(data, result);
-
-  // ✅ แสดงผลลัพธ์
-  render(result);
+  statsEl.innerHTML =
+    "ทั้งหมด: " + totalJobs + " งาน • " +
+    customers + " ลูกค้า • " +
+    locations + " โลเคชั่น" +
+    "<br>ผลค้นหา: " + filtered.length + " งาน";
 }
-``
-
 </script>
 
 </body>
