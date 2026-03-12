@@ -24,12 +24,34 @@
 
 
 <script>
+  
+function renderStats(all, filtered) {
+  const totalJobs = all.length;
+
+  const totalCustomers = new Set(
+    all.map(d => d.code).filter(Boolean)
+  ).size;
+
+  const totalLocations = new Set(
+    all.map(d => d.location).filter(Boolean)
+  ).size;
+
+  const filteredJobs = filtered.length;
+
+  statsEl.innerHTML =
+    "ทั้งหมด: " + totalJobs + " งาน • " +
+    totalCustomers + " ลูกค้า • " +
+    totalLocations + " โลเคชั่น" +
+    "<br>ผลค้นหา: " + filteredJobs + " งาน";
+}
+
 console.log("CHECKSTOCK V2 CLEAN START");
 
 const SHEET_ID = "17dwMvTFAu48MdQ8FwKRDJGAQuAEwpQNmoggzD8OqGJA";
 const CSV_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv";
 
 let data = [];
+  const statsEl = document.getElementById("stats");
 
 fetch(CSV_URL)
   .then(r => r.text())
@@ -38,18 +60,12 @@ fetch(CSV_URL)
     data = rows.map(r => {
       const c = r.split(",");
       return { code:c[0]||"", job:c[1]||"", location:c[2]||"" };
+      enderStats(data, data);
+      renderStats(data, data);
     });
   });
 
-document.getElementById("search").addEventListener("input", () => {
-  const q = search.value.toLowerCase();
-  const list = data.filter(d =>
-    d.code.toLowerCase().includes(q) ||
-    d.job.toLowerCase().includes(q) ||
-    d.location.toLowerCase().includes(q)
-  );
-  render(list);
-});
+document.getElementById("search").addEventListener("input", search);
 
 function render(list){
   result.innerHTML = "";
@@ -62,6 +78,25 @@ function render(list){
       </div>`;
   });
 }
+  
+function search() {
+  const q = document.getElementById("search").value.toLowerCase();
+
+  // กรองข้อมูลตามคำค้น
+  const result = data.filter(d =>
+    (d.code || "").toLowerCase().includes(q) ||
+    (d.job || "").toLowerCase().includes(q) ||
+    (d.location || "").toLowerCase().includes(q)
+  );
+
+  // ✅ อัปเดตสรุป
+  renderStats(data, result);
+
+  // ✅ แสดงผลลัพธ์
+  render(result);
+}
+``
+
 </script>
 
 </body>
